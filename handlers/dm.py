@@ -10,11 +10,12 @@ def handle_dm(event, client):
 
     user_text = event.get("text", "").strip()
     channel = event["channel"]
+    thread_ts = event.get("thread_ts", event["ts"])
 
     send_reply_with_loading(
         text=user_text,
-        thread_id=channel,
+        thread_id=thread_ts,
         channel=channel,
-        thread_ts=None,
+        thread_ts=thread_ts,
         client=client,
     )
