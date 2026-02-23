@@ -1,16 +1,20 @@
-from services.reply import generate_reply
+from services.reply import send_reply_with_loading
 
 
-def handle_dm(event, say):
+def handle_dm(event, client):
     """BotへのDMに返信する。Bot自身のメッセージは無視する。"""
-    # Bot自身のメッセージは無視
     if event.get("bot_id"):
         return
-
-    # DMはimチャンネルタイプのみ処理
     if event.get("channel_type") != "im":
         return
 
     user_text = event.get("text", "").strip()
-    reply = generate_reply(user_text)
-    say(text=reply)
+    channel = event["channel"]
+
+    send_reply_with_loading(
+        text=user_text,
+        thread_id=channel,
+        channel=channel,
+        thread_ts=None,
+        client=client,
+    )

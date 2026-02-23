@@ -1,14 +1,17 @@
 import re
-from services.reply import generate_reply
+from services.reply import send_reply_with_loading
 
 
-def handle_mention(event, say):
+def handle_mention(event, client):
     """チャンネルやスレッドでの@メンションに対してスレッドで返信する。"""
-    # メンション部分（<@UXXXXXX>）を除去してユーザーのメッセージを取得
     user_text = re.sub(r"<@[A-Z0-9]+>\s*", "", event.get("text", "")).strip()
-
-    reply = generate_reply(user_text)
-
-    # スレッド内の場合はthread_ts、そうでなければメッセージのtsをスレッドルートにする
     thread_ts = event.get("thread_ts", event["ts"])
-    say(text=reply, thread_ts=thread_ts)
+    channel = event["channel"]
+
+    send_reply_with_loading(
+        text=user_text,
+        thread_id=thread_ts,
+        channel=channel,
+        thread_ts=thread_ts,
+        client=client,
+    )
