@@ -6,7 +6,7 @@ app = App(token=os.environ["SLACK_BOT_TOKEN"])
 
 
 @app.event("app_mention")
-def handle_mention(event, say):
+def handle_mention(say):
     say("こんにちは")
 
 
