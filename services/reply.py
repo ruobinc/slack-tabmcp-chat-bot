@@ -1,16 +1,23 @@
 import logging
+from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from services.agent import invoke_agent
 
 logger = logging.getLogger(__name__)
 
 LOADING_MESSAGE = ":hourglass_flowing_sand: 考え中..."
 SLACK_MESSAGE_LIMIT = 4000
+TIMEOUT_SECONDS = 30
 
 
 def generate_reply(text: str, thread_id: str) -> str:
-    """DeepAgentでLLM応答を生成する。"""
+    """DeepAgentでLLM応答を生成する。30秒タイムアウト付き。"""
     try:
-        return invoke_agent(text, thread_id)
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(invoke_agent, text, thread_id)
+            return future.result(timeout=TIMEOUT_SECONDS)
+    except TimeoutError:
+        logger.warning("LLM応答タイムアウト（%d秒）", TIMEOUT_SECONDS)
+        return "応答がタイムアウトしました。もう一度お試しください。"
     except Exception:
         logger.exception("LLM応答生成エラー")
         return "エラーが発生しました。しばらくしてからもう一度お試しください。"
