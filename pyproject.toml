@@ -4,5 +4,7 @@ version = "0.1.0"
 description = "Slack ChatBot with Tableau MCP integration"
 requires-python = ">=3.12"
 dependencies = [
+    "deepagents>=0.4.3",
+    "langchain-aws>=1.2.5",
     "slack-bolt>=1.27.0",
 ]
