@@ -25,7 +25,7 @@ def _build_server_config():
                 "SITE_NAME": os.environ.get("TABLEAU_SITE_NAME", ""),
                 "JWT_SUB_CLAIM": os.environ.get("TABLEAU_JWT_SUB_CLAIM", ""),
                 "CONNECTED_APP_CLIENT_ID": os.environ.get("TABLEAU_CONNECTED_APP_CLIENT_ID", ""),
-                "CONNECTED_APP_CLIENT_SECRET": os.environ.get("TABLEAU_CONNECTED_APP_CLIENT_SECRET", ""),
+                "CONNECTED_APP_SECRET_ID": os.environ.get("TABLEAU_CONNECTED_APP_SECRET_ID", ""),
                 "CONNECTED_APP_SECRET_VALUE": os.environ.get("TABLEAU_CONNECTED_APP_SECRET_VALUE", ""),
                 "DEFAULT_LOG_LEVEL": "warn",
             },

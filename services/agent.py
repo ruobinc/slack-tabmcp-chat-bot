@@ -22,7 +22,7 @@ _mcp_client = None
 async def _load_mcp_tools(client, server_name):
     """指定サーバーのツールを取得する。失敗時は空リストを返す。"""
     try:
-        tools = await client.get_tools(server_name)
+        tools = await client.get_tools(server_name=server_name)
         logger.info("%sから%d個のツールを取得", server_name, len(tools))
         return tools
     except Exception:
@@ -42,8 +42,6 @@ async def init_agent():
     subagents = []
 
     if _mcp_client is not None:
-        await _mcp_client.__aenter__()
-
         # MCPツール取得（並列）
         tableau_tools, slack_tools = await asyncio.gather(
             _load_mcp_tools(_mcp_client, "tableau"),
@@ -99,10 +97,6 @@ async def shutdown_agent():
     """MCPクライアントをクリーンアップする。"""
     global _mcp_client
     if _mcp_client is not None:
-        try:
-            await _mcp_client.__aexit__(None, None, None)
-        except Exception:
-            logger.exception("MCPクライアントのシャットダウンに失敗")
         _mcp_client = None
 
 
