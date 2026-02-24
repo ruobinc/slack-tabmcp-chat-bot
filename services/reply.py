@@ -1,21 +1,22 @@
+import asyncio
 import logging
-from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from services.agent import invoke_agent
 
 logger = logging.getLogger(__name__)
 
 LOADING_MESSAGE = ":hourglass_flowing_sand: 考え中..."
 SLACK_MESSAGE_LIMIT = 4000
-TIMEOUT_SECONDS = 30
+TIMEOUT_SECONDS = 90
 
 
-def generate_reply(text: str, thread_id: str) -> str:
-    """DeepAgentでLLM応答を生成する。30秒タイムアウト付き。"""
+async def generate_reply(text: str, thread_id: str) -> str:
+    """DeepAgentでLLM応答を生成する。90秒タイムアウト付き。"""
     try:
-        with ThreadPoolExecutor(max_workers=1) as executor:
-            future = executor.submit(invoke_agent, text, thread_id)
-            return future.result(timeout=TIMEOUT_SECONDS)
-    except TimeoutError:
+        return await asyncio.wait_for(
+            invoke_agent(text, thread_id),
+            timeout=TIMEOUT_SECONDS,
+        )
+    except asyncio.TimeoutError:
         logger.warning("LLM応答タイムアウト（%d秒）", TIMEOUT_SECONDS)
         return "応答がタイムアウトしました。もう一度お試しください。"
     except Exception:
@@ -23,7 +24,7 @@ def generate_reply(text: str, thread_id: str) -> str:
         return "エラーが発生しました。しばらくしてからもう一度お試しください。"
 
 
-def send_reply_with_loading(text: str, thread_id: str, channel: str, thread_ts: str, client):
+async def send_reply_with_loading(text: str, thread_id: str, channel: str, thread_ts: str, client):
     """ローディングメッセージ送信→LLM応答で更新する。"""
     loading = client.chat_postMessage(
         channel=channel,
@@ -31,7 +32,7 @@ def send_reply_with_loading(text: str, thread_id: str, channel: str, thread_ts: 
         thread_ts=thread_ts,
     )
 
-    reply = generate_reply(text, thread_id)
+    reply = await generate_reply(text, thread_id)
 
     if len(reply) <= SLACK_MESSAGE_LIMIT:
         client.chat_update(
