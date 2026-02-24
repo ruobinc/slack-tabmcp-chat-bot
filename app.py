@@ -3,8 +3,8 @@ import logging
 import os
 import signal
 
-from slack_bolt import App
-from slack_bolt.adapter.socket_mode import SocketModeHandler
+from slack_bolt.async_app import AsyncApp
+from slack_bolt.adapter.socket_mode.async_handler import AsyncSocketModeHandler
 
 from handlers.mention import handle_mention
 from handlers.dm import handle_dm
@@ -13,34 +13,36 @@ from services.agent import init_agent, shutdown_agent
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = App(token=os.environ["SLACK_BOT_TOKEN"])
+app = AsyncApp(token=os.environ["SLACK_BOT_TOKEN"])
 
 app.event("app_mention")(handle_mention)
 app.event("message")(handle_dm)
 
 
-def main():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-
+async def main():
     # MCPクライアント + DeepAgent を起動時に初期化
     logger.info("Agent初期化中...")
-    loop.run_until_complete(init_agent())
+    await init_agent()
     logger.info("Agent初期化完了")
 
-    handler = SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"])
+    handler = AsyncSocketModeHandler(app, os.environ["SLACK_APP_TOKEN"])
+
+    loop = asyncio.get_event_loop()
 
     def _shutdown(signum, frame):
         logger.info("シャットダウン中...")
-        handler.close()
-        loop.run_until_complete(shutdown_agent())
-        loop.close()
+        loop.create_task(_cleanup(handler))
+
+    async def _cleanup(h):
+        await h.close_async()
+        await shutdown_agent()
+        loop.stop()
 
     signal.signal(signal.SIGTERM, _shutdown)
     signal.signal(signal.SIGINT, _shutdown)
 
-    handler.start()
+    await handler.start_async()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

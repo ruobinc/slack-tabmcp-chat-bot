@@ -26,7 +26,7 @@ async def generate_reply(text: str, thread_id: str) -> str:
 
 async def send_reply_with_loading(text: str, thread_id: str, channel: str, thread_ts: str, client):
     """ローディングメッセージ送信→LLM応答で更新する。"""
-    loading = client.chat_postMessage(
+    loading = await client.chat_postMessage(
         channel=channel,
         text=LOADING_MESSAGE,
         thread_ts=thread_ts,
@@ -35,19 +35,19 @@ async def send_reply_with_loading(text: str, thread_id: str, channel: str, threa
     reply = await generate_reply(text, thread_id)
 
     if len(reply) <= SLACK_MESSAGE_LIMIT:
-        client.chat_update(
+        await client.chat_update(
             channel=channel,
             ts=loading["ts"],
             text=reply,
         )
     else:
-        client.chat_update(
+        await client.chat_update(
             channel=channel,
             ts=loading["ts"],
             text=reply[:SLACK_MESSAGE_LIMIT],
         )
         for i in range(SLACK_MESSAGE_LIMIT, len(reply), SLACK_MESSAGE_LIMIT):
-            client.chat_postMessage(
+            await client.chat_postMessage(
                 channel=channel,
                 text=reply[i:i + SLACK_MESSAGE_LIMIT],
                 thread_ts=thread_ts,
