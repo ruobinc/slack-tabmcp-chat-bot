@@ -52,6 +52,7 @@ services/           # ビジネスロジック
 └── reply.py        # ローディングUX・LLM応答フォーマット・Slack送信
 test_local.py       # Slack抜きローカルテスト（.gitignore）
 docs/plans/         # 設計・実装計画ドキュメント
+docs/manual/        # 運用手順書（LangSmithトレース分析等）
 ```
 
 ## MCP統合の注意事項
@@ -61,6 +62,14 @@ docs/plans/         # 設計・実装計画ドキュメント
 - Tableau MCP direct-trust: 環境変数は`CONNECTED_APP_SECRET_ID`
 - Slack MCP: `mcp.slack.com/mcp` + User Token (xoxp-) が必須。
 - Slack MCPの`headers`設定で`Authorization: Bearer {token}`を渡す
+
+## SubAgentアーキテクチャ
+
+- SubAgentは`CompiledSubAgent`（`create_agent`で事前構築、`runnable`キー付き辞書）として`create_deep_agent`に渡す
+- これにより`create_deep_agent`のデフォルトミドルウェア（TodoList, Filesystem, Summarization）自動注入をバイパスし、トークン消費を大幅削減
+- ミドルウェアは`AnthropicPromptCachingMiddleware` + `PatchToolCallsMiddleware`の最小構成
+- MCPツールは各subagentの`*_ALLOWED_TOOLS`でフィルタリング。不要ツール定義によるコンテキスト肥大を防止
+- LangSmithトレース分析: `docs/manual/langsmith-trace-how-to.md`の公開API手順で確認
 
 ## イベントハンドリング
 
