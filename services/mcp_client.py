@@ -33,13 +33,19 @@ def _build_server_config():
     else:
         logger.warning("TABLEAU_MCP_PATH未設定: Tableau SubAgentは無効")
 
-    # Slack MCP (HTTP)
+    # Slack MCP (HTTP) - Bearer Token認証
     slack_url = os.environ.get("SLACK_MCP_SERVER")
-    if slack_url:
+    slack_token = os.environ.get("SLACK_MCP_USER_TOKEN")
+    if slack_url and slack_token:
         servers["slack"] = {
             "transport": "streamable_http",
             "url": slack_url,
+            "headers": {
+                "Authorization": f"Bearer {slack_token}",
+            },
         }
+    elif slack_url:
+        logger.warning("SLACK_MCP_USER_TOKEN未設定: Slack SubAgentは無効")
     else:
         logger.warning("SLACK_MCP_SERVER未設定: Slack SubAgentは無効")
 
