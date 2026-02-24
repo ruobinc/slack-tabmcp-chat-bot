@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 LOADING_MESSAGE = ":hourglass_flowing_sand: 考え中..."
 SLACK_MESSAGE_LIMIT = 4000
-TIMEOUT_SECONDS = 90
+TIMEOUT_SECONDS = 300  # 5min
 
 
 async def generate_reply(text: str, thread_id: str) -> str:
