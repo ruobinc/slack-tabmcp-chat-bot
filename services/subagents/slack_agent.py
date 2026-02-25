@@ -26,6 +26,8 @@ SLACK_ALLOWED_TOOLS = {
 def build_slack_subagent(tools):
     """Slack MCPツール群からSubAgent定義を構築する。"""
     filtered = [t for t in tools if t.name in SLACK_ALLOWED_TOOLS]
+    for t in filtered:
+        t.handle_tool_error = True
     return {
         "name": "slack-operator",
         "description": SLACK_DESCRIPTION,
