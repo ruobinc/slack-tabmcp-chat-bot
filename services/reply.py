@@ -1,12 +1,13 @@
 import asyncio
 import logging
+
 from services.agent import invoke_agent
 
 logger = logging.getLogger(__name__)
 
 LOADING_MESSAGE = ":hourglass_flowing_sand: 考え中..."
 SLACK_MESSAGE_LIMIT = 4000
-TIMEOUT_SECONDS = 300  # 5min
+TIMEOUT_SECONDS = 600  # 10min
 
 
 async def generate_reply(text: str, thread_id: str, thread_context: str = "") -> str:
@@ -24,7 +25,14 @@ async def generate_reply(text: str, thread_id: str, thread_context: str = "") ->
         return "エラーが発生しました。しばらくしてからもう一度お試しください。"
 
 
-async def send_reply_with_loading(text: str, thread_id: str, channel: str, thread_ts: str, client, thread_context: str = ""):
+async def send_reply_with_loading(
+    text: str,
+    thread_id: str,
+    channel: str,
+    thread_ts: str,
+    client,
+    thread_context: str = "",
+):
     """ローディングメッセージ送信→LLM応答で更新する。"""
     loading = await client.chat_postMessage(
         channel=channel,
@@ -49,6 +57,6 @@ async def send_reply_with_loading(text: str, thread_id: str, channel: str, threa
         for i in range(SLACK_MESSAGE_LIMIT, len(reply), SLACK_MESSAGE_LIMIT):
             await client.chat_postMessage(
                 channel=channel,
-                text=reply[i:i + SLACK_MESSAGE_LIMIT],
+                text=reply[i : i + SLACK_MESSAGE_LIMIT],
                 thread_ts=thread_ts,
             )
