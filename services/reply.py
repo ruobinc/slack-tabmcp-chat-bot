@@ -9,11 +9,11 @@ SLACK_MESSAGE_LIMIT = 4000
 TIMEOUT_SECONDS = 300  # 5min
 
 
-async def generate_reply(text: str, thread_id: str) -> str:
+async def generate_reply(text: str, thread_id: str, thread_context: str = "") -> str:
     """DeepAgentでLLM応答を生成する。90秒タイムアウト付き。"""
     try:
         return await asyncio.wait_for(
-            invoke_agent(text, thread_id),
+            invoke_agent(text, thread_id, thread_context=thread_context),
             timeout=TIMEOUT_SECONDS,
         )
     except asyncio.TimeoutError:
@@ -24,7 +24,7 @@ async def generate_reply(text: str, thread_id: str) -> str:
         return "エラーが発生しました。しばらくしてからもう一度お試しください。"
 
 
-async def send_reply_with_loading(text: str, thread_id: str, channel: str, thread_ts: str, client):
+async def send_reply_with_loading(text: str, thread_id: str, channel: str, thread_ts: str, client, thread_context: str = ""):
     """ローディングメッセージ送信→LLM応答で更新する。"""
     loading = await client.chat_postMessage(
         channel=channel,
@@ -32,7 +32,7 @@ async def send_reply_with_loading(text: str, thread_id: str, channel: str, threa
         thread_ts=thread_ts,
     )
 
-    reply = await generate_reply(text, thread_id)
+    reply = await generate_reply(text, thread_id, thread_context=thread_context)
 
     if len(reply) <= SLACK_MESSAGE_LIMIT:
         await client.chat_update(

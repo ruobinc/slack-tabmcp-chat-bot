@@ -49,7 +49,7 @@ def _build_compiled_subagent(spec, model):
         tools=spec["tools"],
         middleware=minimal_middleware,
         name=spec["name"],
-    ).with_config({"recursion_limit": 30})
+    ).with_config({"recursion_limit": spec.get("recursion_limit", 30)})
 
     return {
         "name": spec["name"],
@@ -129,12 +129,13 @@ async def shutdown_agent():
         _mcp_client = None
 
 
-async def invoke_agent(message: str, thread_id: str) -> str:
+async def invoke_agent(message: str, thread_id: str, thread_context: str = "") -> str:
     """DeepAgentを呼び出してテキスト応答を返す。"""
     agent = await init_agent()
     config = {"configurable": {"thread_id": thread_id}}
+    content = f"{thread_context}{message}" if thread_context else message
     result = await agent.ainvoke(
-        {"messages": [{"role": "user", "content": message}]},
+        {"messages": [{"role": "user", "content": content}]},
         config=config,
     )
 
