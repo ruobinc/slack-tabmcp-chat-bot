@@ -49,7 +49,7 @@ def _build_compiled_subagent(spec, model):
         tools=spec["tools"],
         middleware=minimal_middleware,
         name=spec["name"],
-    ).with_config({"recursion_limit": spec.get("recursion_limit", 30)})
+    ).with_config({"recursion_limit": 30})
 
     return {
         "name": spec["name"],
